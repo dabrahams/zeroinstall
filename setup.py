@@ -1,13 +1,24 @@
-from distutils.core import setup
+from setuptools import setup
 from distutils.util import convert_path
-from distutils.core import Command
-from distutils.command.build_py import build_py
-from distutils.command.install import install
-from distutils.command.install_lib import install_lib
+from setuptools import Command
+from setuptools.command.build_py import build_py
+from setuptools.command.install import install
+from setuptools.command.install_lib import install_lib
 from distutils.command.install_data import install_data
+from pkg_resources import EntryPoint
 import os, subprocess, sys
 import glob
 import zeroinstall
+
+package_data_files = [
+	"zeroinstall/0launch-gui/README",
+	"zeroinstall/0launch-gui/0launch-gui",
+	"zeroinstall/0launch-gui/zero-install.ui",
+	"zeroinstall/gtkui/desktop.ui",
+	"zeroinstall/gtkui/cache.ui",
+	"zeroinstall/injector/EquifaxSecureCA.crt",
+	"zeroinstall/zerostore/_unlzma",
+	]
 
 class adjust_scripts_for_home(Command):
 	"""setup.py install --home puts libraries in ~/lib/python, but Python doesn't look there.
@@ -32,7 +43,7 @@ class adjust_scripts_for_home(Command):
 			)
 
 	def run(self):
-		for script in self.distribution.scripts:
+		for ep in self.distribution.entry_points['console_scripts']:
 			outfile = os.path.join(self.scripts_dir, os.path.basename(script))
 
 			stream = open(outfile)
@@ -45,28 +56,6 @@ sys.path.insert(0, %s)''' % repr(self.lib_dir))
 			stream = open(outfile, 'w')
 			stream.write(code)
 			stream.close()
-
-class build_with_data(build_py):
-	"""Python < 2.4 doesn't support package_data_files, so add it manually."""
-	package_data_files = [
-		"zeroinstall/0launch-gui/README",
-		"zeroinstall/0launch-gui/0launch-gui",
-		"zeroinstall/0launch-gui/zero-install.ui",
-		"zeroinstall/gtkui/desktop.ui",
-		"zeroinstall/gtkui/cache.ui",
-		"zeroinstall/injector/EquifaxSecureCA.crt",
-		"zeroinstall/zerostore/_unlzma",
-	]
-	def run(self):
-		# Copy .py files and build, as usual
-		build_py.run(self)
-		# Copy data files
-		for data_file in self.package_data_files:
-			outfile = os.path.join(self.build_lib, data_file)
-			self.copy_file(data_file, outfile, preserve_mode=0)
-			executable = (os.stat(data_file).st_mode & 0111) != 0
-			if executable:
-				os.chmod(outfile, os.stat(outfile).st_mode | 0111)
 
 class install_lib_exec(install_lib):
 	def run(self):
@@ -105,10 +94,11 @@ class my_install(install):
 
 	def run(self):
 		install.run(self)	# super.run()
-		menus_dir = os.path.join(self.__config_dir, 'menus/applications-merged')
-		self.mkpath(menus_dir)
-		menu = convert_path('share/applications/zeroinstall.menu')
-		self.copy_file(menu, menus_dir)
+                if os.name != 'nt':
+                        menus_dir = os.path.join(self.__config_dir, 'menus/applications-merged')
+                        self.mkpath(menus_dir)
+                        menu = convert_path('share/applications/zeroinstall.menu')
+                        self.copy_file(menu, menus_dir)
 
 		if self.home:
 			self.run_command('adjust_scripts_for_home')
@@ -119,7 +109,7 @@ setup(name="zeroinstall-injector",
       author="Thomas Leonard",
       author_email="zero-install-devel@lists.sourceforge.net",
       url="http://0install.net",
-      scripts=['0launch', '0alias', '0store', '0store-secure-add', '0desktop', '0install'],
+      entry_points=dict(console_scripts=['%s = zeroinstall.scripts.%s:main' % ('0'+x,x.replace('-','_')) for x in ['launch', 'alias', 'store', 'store-secure-add', 'desktop', 'install']]),
       data_files = [('man/man1', ['0launch.1', '0alias.1', '0store-secure-add.1', '0store.1', '0desktop.1', '0install.1']),
 		    ('share/applications', ['share/applications/zeroinstall-add.desktop', 'share/applications/zeroinstall-manage.desktop']),
 		    ('share/desktop-directories', ['share/desktop-directories/zeroinstall.directory']),
@@ -129,7 +119,6 @@ setup(name="zeroinstall-injector",
 		    ('share/icons/hicolor/scalable/apps', ['share/icons/scalable/zeroinstall.svg'])],
       license='LGPL',
       cmdclass={
-	'build_py': build_with_data,
 	'install_lib': install_lib_exec,
 	'install_data': install_data_locale,
 	'adjust_scripts_for_home': adjust_scripts_for_home,
@@ -144,4 +133,4 @@ use.
 The injector solves this problem by selecting components to meet a program's
 requirements, according to a policy you give it. The injector finds out which
 versions are available, and downloads and runs the ones you choose.""",
-      packages=["zeroinstall", "zeroinstall.support", "zeroinstall.zerostore", "zeroinstall.injector", "zeroinstall.0launch-gui", "zeroinstall.gtkui", "zeroinstall.cmd"])
+      packages=["zeroinstall", "zeroinstall.support", "zeroinstall.zerostore", "zeroinstall.injector", "zeroinstall.0launch-gui", "zeroinstall.gtkui", "zeroinstall.cmd", "zeroinstall.scripts"])
