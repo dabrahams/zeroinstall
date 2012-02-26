@@ -7,6 +7,7 @@ from zeroinstall.injector import model, writer
 from zeroinstall import support
 from zeroinstall.gtkui import gtkutils
 import utils
+import subprocess 
 
 def _build_stability_menu(impl):
 	menu = gtk.Menu()
@@ -134,7 +135,7 @@ class ImplementationList:
 
 			if not impl.id.startswith('package:') and impl.is_available(self.driver.config.stores):
 				def open():
-					os.spawnlp(os.P_WAIT, '0launch',
+					subprocess.call([
 						'0launch', rox_filer, '-d',
 						impl.local_path or self.driver.config.stores.lookup_any(impl.digests))
 				item = gtk.MenuItem(_('Open cached copy'))

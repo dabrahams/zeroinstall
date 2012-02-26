@@ -5,7 +5,7 @@
 # See the README file for details, or visit http://0install.net.
 
 from zeroinstall import _
-import shutil, os, tempfile
+import shutil, os, tempfile, subprocess
 from logging import info, warn
 
 from zeroinstall import SafeException
@@ -45,7 +45,7 @@ def add_to_menu(iface, icon_path, category, zlaunch=None):
 		if len(iface.get_metadata(namespaces.XMLNS_IFACE, 'needs-terminal')):
 			desktop.write('Terminal=true\n')
 		desktop.close()
-		status = os.spawnlp(os.P_WAIT, 'xdg-desktop-menu', 'xdg-desktop-menu', 'install', desktop_name)
+		status = subprocess.call(['xdg-desktop-menu', 'install', desktop_name])
 	finally:
 		shutil.rmtree(tmpdir)
 

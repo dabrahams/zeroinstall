@@ -7,6 +7,7 @@ from __future__ import print_function
 from zeroinstall import _
 import os
 import gtk
+import subprocess
 
 from zeroinstall.injector import namespaces, model
 from zeroinstall.zerostore import BadDigest, manifest
@@ -329,7 +330,7 @@ class CachedImplementation:
 			support.ro_rmtree(self.impl_path)
 	
 	def open_rox(self, explorer):
-		os.spawnlp(os.P_WAIT, '0launch', '0launch', ROX_IFACE, '-d', self.impl_path)
+		subprocess.call(['0launch', ROX_IFACE, '-d', self.impl_path])
 	
 	def verify(self, explorer):
 		try:
