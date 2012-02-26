@@ -3,3 +3,5 @@
 .tags
 share/locale/zero-install.pot
 /build/
+/zeroinstall_injector.egg-info/
+
