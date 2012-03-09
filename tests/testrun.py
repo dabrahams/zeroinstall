@@ -23,10 +23,19 @@ recursive_runner = os.path.join(mydir, 'runnable', 'RecursiveRunner.xml')
 command_feed = os.path.join(mydir, 'Command.xml')
 package_selections = os.path.join(mydir, 'package-selection.xml')
 
+def _0launch(*args):
+	env = dict(os.environ)
+	path = os.path.dirname(mydir);
+	env['PYTHONPATH'] = path if not env.has_key('PYTHONPATH') else path + os.pathsep + env['PYTHONPATH']
+	return subprocess.Popen(
+		(sys.executable, local_0launch) + args,
+		env=env,
+		stdout=subprocess.PIPE).communicate()[0]
+
+
 class TestRun(BaseTest):
 	def testRunnable(self):
-		child = subprocess.Popen([sys.executable, local_0launch, '--', runnable, 'user-arg'], stdout = subprocess.PIPE)
-		stdout, _ = child.communicate()
+		stdout = _0launch('--', runnable, 'user-arg')
 		assert 'Runner: script=A test script: args=command-arg -- user-arg' in stdout, stdout
 
 	def testCommandBindings(self):
@@ -92,13 +101,11 @@ class TestRun(BaseTest):
 		assert 'script' in out, out
 
 	def testRecursive(self):
-		child = subprocess.Popen([sys.executable, local_0launch, '--', recursive_runner, 'user-arg'], stdout = subprocess.PIPE)
-		stdout, _ = child.communicate()
+		stdout = _0launch('--', recursive_runner, 'user-arg')
 		assert 'Runner: script=A test script: args=command-arg -- arg-for-runnable recursive-arg -- user-arg' in stdout, stdout
 
 	def testExecutable(self):
-		child = subprocess.Popen([sys.executable, local_0launch, '--', runexec, 'user-arg-run'], stdout = subprocess.PIPE)
-		stdout, _ = child.communicate()
+		stdout = _0launch('--', runexec, 'user-arg-run')
 		assert 'Runner: script=A test script: args=foo-arg -- var user-arg-run' in stdout, stdout
 		assert 'Runner: script=A test script: args=command-arg -- path user-arg-run' in stdout, stdout
 
@@ -109,16 +116,14 @@ class TestRun(BaseTest):
 		with open(runenv, 'wb') as s:
 			s.write('#!/\n')
 
-		child = subprocess.Popen([sys.executable, local_0launch, '--', runexec, 'user-arg-run'], stdout = subprocess.PIPE)
-		stdout, _ = child.communicate()
+		stdout = _0launch('--', runexec, 'user-arg-run')
 		assert 'Runner: script=A test script: args=foo-arg -- var user-arg-run' in stdout, stdout
 		assert 'Runner: script=A test script: args=command-arg -- path user-arg-run' in stdout, stdout
 	
 	def testRunPackage(self):
 		if 'TEST' in os.environ:
 			del os.environ['TEST']
-		child = subprocess.Popen([sys.executable, local_0launch, '--wrapper', 'echo $TEST #', '--', package_selections], stdout = subprocess.PIPE)
-		stdout, _ = child.communicate()
+		stdout = _0launch('--wrapper', 'echo $TEST #', '--', package_selections)
 		assert stdout.strip() == 'OK', stdout
 	
 if __name__ == '__main__':
