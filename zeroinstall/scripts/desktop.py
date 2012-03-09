@@ -9,6 +9,10 @@ except locale.Error:
 
 ## PATH ##
 
-from zeroinstall.gtkui import desktop
-import sys
-desktop.main(sys.argv[1:])
+def main():
+        from zeroinstall.gtkui import desktop
+        import sys
+        desktop.main(sys.argv[1:])
+
+if __name__ == '__main__':
+        main()

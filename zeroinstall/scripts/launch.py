@@ -13,6 +13,10 @@ except locale.Error:
 
 ## PATH ##
 
-from zeroinstall.injector import cli
-import sys
-cli.main(sys.argv[1:])
+def main():
+        from zeroinstall.injector import cli
+        import sys
+        cli.main(sys.argv[1:])
+
+if __name__ == '__main__':
+        main()

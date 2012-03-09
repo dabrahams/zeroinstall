@@ -13,6 +13,10 @@ except locale.Error:
 
 ## PATH ##
 
-from zeroinstall.cmd import main
-import sys
-main(sys.argv[1:])
+def main():
+        from zeroinstall.cmd import main
+        import sys
+        main(sys.argv[1:])
+
+if __name__ == '__main__':
+        main()
