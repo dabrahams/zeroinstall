@@ -123,20 +123,21 @@ def check_type_ok(mime_type):
 		from zeroinstall import version
 		raise SafeException(_("Unsupported archive type '%(type)s' (for injector version %(version)s)") % {'type': mime_type, 'version': version})
 
-def _exec_maybe_sandboxed(writable, prog, *args):
+def _spawn_maybe_sandboxed(writable, prog, *args, **kw):
 	"""execlp prog, with (only) the 'writable' directory writable if sandboxing is available.
 	If no sandbox is available, run without a sandbox."""
 	prog_path = find_in_path(prog)
 	if not prog_path: raise Exception(_("'%s' not found in $PATH") % prog)
 	if _pola_run is None:
-		os.execlp(prog_path, prog_path, *args)
+		return subprocess.Popen((prog,)+args, **kw)
+
 	# We have pola-shell :-)
 	pola_args = ['--prog', prog_path, '-f', '/']
 	for a in args:
 		pola_args += ['-a', a]
 	if writable:
 		pola_args += ['-fw', writable]
-	os.execl(_pola_run, _pola_run, *pola_args)
+	return subprocess.Popen([_pola_run]+pola_args, executable=_pola_run, **kw)
 
 def unpack_archive_over(url, data, destdir, extract = None, type = None, start_offset = 0):
 	"""Like unpack_archive, except that we unpack to a temporary directory first and
@@ -268,22 +269,10 @@ def extract_rpm(stream, destdir, extract = None, start_offset = 0):
 		raise SafeException(_('Sorry, but the "extract" attribute is not yet supported for RPMs'))
 	fd, cpiopath = mkstemp('-rpm-tmp')
 	try:
-		child = os.fork()
-		if child == 0:
-			try:
-				try:
-					os.dup2(stream.fileno(), 0)
-					os.lseek(0, start_offset, 0)
-					os.dup2(fd, 1)
-					_exec_maybe_sandboxed(None, 'rpm2cpio', '-')
-				except:
-					traceback.print_exc()
-			finally:
-				os._exit(1)
-		id, status = os.waitpid(child, 0)
-		assert id == child
-		if status != 0:
-			raise SafeException(_("rpm2cpio failed; can't unpack RPM archive; exit code %d") % status)
+                stream.seek(start_offset)
+                child = _spawn_maybe_sandboxed(None, 'rpm2cpio', '-', stdin=stream, stdout=fd)
+                if child.wait():
+			raise SafeException(_("rpm2cpio failed; can't unpack RPM archive; exit code %d") % child.returncode)
 		os.close(fd)
 		fd = None
 
