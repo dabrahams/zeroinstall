@@ -55,4 +55,4 @@ if coverage:
 	incl('../zeroinstall/cmd')
 	incl('../zeroinstall/injector')
 	incl('../zeroinstall/zerostore')
-	coverage.report(all_sources + ['../0launch'])
+	coverage.report(all_sources + ['../zeroinstall/scripts/launch.py'])

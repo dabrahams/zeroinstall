@@ -16,7 +16,7 @@ from zeroinstall.injector.requirements import Requirements
 from zeroinstall.injector.driver import Driver
 
 mydir = os.path.abspath(os.path.dirname(__file__))
-local_0launch = os.path.join(os.path.dirname(mydir), '0launch')
+local_0launch = os.path.join(os.path.dirname(mydir), 'zeroinstall', 'scripts', 'launch.py')
 runnable = os.path.join(mydir, 'runnable', 'Runnable.xml')
 runexec = os.path.join(mydir, 'runnable', 'RunExec.xml')
 recursive_runner = os.path.join(mydir, 'runnable', 'RecursiveRunner.xml')
@@ -25,7 +25,7 @@ package_selections = os.path.join(mydir, 'package-selection.xml')
 
 class TestRun(BaseTest):
 	def testRunnable(self):
-		child = subprocess.Popen([local_0launch, '--', runnable, 'user-arg'], stdout = subprocess.PIPE)
+		child = subprocess.Popen([sys.executable, local_0launch, '--', runnable, 'user-arg'], stdout = subprocess.PIPE)
 		stdout, _ = child.communicate()
 		assert 'Runner: script=A test script: args=command-arg -- user-arg' in stdout, stdout
 
@@ -92,12 +92,12 @@ class TestRun(BaseTest):
 		assert 'script' in out, out
 
 	def testRecursive(self):
-		child = subprocess.Popen([local_0launch, '--', recursive_runner, 'user-arg'], stdout = subprocess.PIPE)
+		child = subprocess.Popen([sys.executable, local_0launch, '--', recursive_runner, 'user-arg'], stdout = subprocess.PIPE)
 		stdout, _ = child.communicate()
 		assert 'Runner: script=A test script: args=command-arg -- arg-for-runnable recursive-arg -- user-arg' in stdout, stdout
 
 	def testExecutable(self):
-		child = subprocess.Popen([local_0launch, '--', runexec, 'user-arg-run'], stdout = subprocess.PIPE)
+		child = subprocess.Popen([sys.executable, local_0launch, '--', runexec, 'user-arg-run'], stdout = subprocess.PIPE)
 		stdout, _ = child.communicate()
 		assert 'Runner: script=A test script: args=foo-arg -- var user-arg-run' in stdout, stdout
 		assert 'Runner: script=A test script: args=command-arg -- path user-arg-run' in stdout, stdout
@@ -109,7 +109,7 @@ class TestRun(BaseTest):
 		with open(runenv, 'wb') as s:
 			s.write('#!/\n')
 
-		child = subprocess.Popen([local_0launch, '--', runexec, 'user-arg-run'], stdout = subprocess.PIPE)
+		child = subprocess.Popen([sys.executable, local_0launch, '--', runexec, 'user-arg-run'], stdout = subprocess.PIPE)
 		stdout, _ = child.communicate()
 		assert 'Runner: script=A test script: args=foo-arg -- var user-arg-run' in stdout, stdout
 		assert 'Runner: script=A test script: args=command-arg -- path user-arg-run' in stdout, stdout
@@ -117,7 +117,7 @@ class TestRun(BaseTest):
 	def testRunPackage(self):
 		if 'TEST' in os.environ:
 			del os.environ['TEST']
-		child = subprocess.Popen([local_0launch, '--wrapper', 'echo $TEST #', '--', package_selections], stdout = subprocess.PIPE)
+		child = subprocess.Popen([sys.executable, local_0launch, '--wrapper', 'echo $TEST #', '--', package_selections], stdout = subprocess.PIPE)
 		stdout, _ = child.communicate()
 		assert stdout.strip() == 'OK', stdout
 	
