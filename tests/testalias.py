@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 from basetest import BaseTest
-import sys, tempfile
+import sys
 from StringIO import StringIO
 import unittest
 
 sys.path.insert(0, '..')
 
 from zeroinstall import alias
+from zeroinstall.support.preserved_tempfile import NamedTemporaryFile
 
 expected_script = """#!/bin/sh
 exec 0launch 'http://example.com/foo.xml' "$@"
@@ -16,7 +17,7 @@ old_script = """#!/bin/sh
 if [ "$*" = "--versions" ]; then
   exec 0launch -gd 'http://example.com/foo.xml' "$@"
 else
-  exec 0launch  'http://example.com/foo.xml' "$@"
+  exec 0launch	'http://example.com/foo.xml' "$@"
 fi
  """
 
@@ -54,63 +55,56 @@ class TestAlias(BaseTest):
 		self.assertEqual(expected_script_command, buf.getvalue())
 
 	def testParse(self):
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(expected_script)
-		tmp.flush()
-		tmp.seek(0)
+		tmp.close(preserve=True)
 		uri, main = alias.parse_script(tmp.name)
 		self.assertEqual('http://example.com/foo.xml', uri)
 		self.assertEqual(None, main)
 
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(expected_script_main)
-		tmp.flush()
-		tmp.seek(0)
+		tmp.close(preserve=True)
 		uri, main = alias.parse_script(tmp.name)
 		self.assertEqual('http://example.com/foo.xml', uri)
 		self.assertEqual('a\'\'\\test', main)
 
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(expected_script_command)
-		tmp.flush()
-		tmp.seek(0)
+		tmp.close(preserve=True)
 		info = alias.parse_script(tmp.name)
 		self.assertEqual('http://example.com/foo.xml', info.uri)
 		self.assertEqual('a\'\'\\test', info.command)
 		self.assertEqual(None, info.main)
 
 	def testParseOld(self):
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(old_script)
-		tmp.flush()
-		tmp.seek(0)
+		tmp.close(preserve=True)
 		uri, main = alias.parse_script(tmp.name)
 		self.assertEqual('http://example.com/foo.xml', uri)
 		self.assertEqual(None, main)
 
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(old_script_main)
-		tmp.flush()
-		tmp.seek(0)
+		tmp.close(preserve=True)
 		uri, main = alias.parse_script(tmp.name)
 		self.assertEqual('http://example.com/foo.xml', uri)
 		self.assertEqual('a\'\'\\test', main)
 	
 	def testParseException(self):
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write('hi' + expected_script)
-		tmp.flush()
-		tmp.seek(0)
+		tmp.close(preserve=True)
 		try:
 			alias.parse_script(tmp.name)
 			assert False
 		except alias.NotAnAliasScript:
 			pass
 
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(expected_script_command.replace('command', 'bob'))
-		tmp.flush()
-		tmp.seek(0)
+		tmp.close(preserve=True)
 		try:
 			alias.parse_script(tmp.name)
 			assert False

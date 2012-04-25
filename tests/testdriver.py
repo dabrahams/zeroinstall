@@ -10,6 +10,7 @@ from zeroinstall.injector import model, gpg, namespaces, reader, run, fetch
 from zeroinstall.injector.requirements import Requirements
 from zeroinstall.injector.driver import Driver
 from zeroinstall.support import basedir, tasks
+from zeroinstall.support.preserved_tempfile import NamedTemporaryFile
 import data
 
 foo_iface_uri = 'http://foo'
@@ -71,7 +72,7 @@ class TestDriver(BaseTest):
 			assert 'Unknown digest algorithm' in str(ex)
 	
 	def testDownload(self):
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(
 """<?xml version="1.0" ?>
 <interface
@@ -82,7 +83,7 @@ class TestDriver(BaseTest):
   <description>Foo</description>
   <implementation version='1.0' id='/bin'/>
 </interface>""")
-		tmp.flush()
+		tmp.close(preserve=True)
 		driver = Driver(requirements = Requirements(tmp.name), config = self.config)
 		try:
 			download_and_execute(driver, ['Hello'])
@@ -92,7 +93,7 @@ class TestDriver(BaseTest):
 		tmp.close()
 
 	def testNoMain(self):
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(
 """<?xml version="1.0" ?>
 <interface
@@ -102,7 +103,7 @@ class TestDriver(BaseTest):
   <description>Foo</description>
   <implementation version='1.0' id='/bin'/>
 </interface>""")
-		tmp.flush()
+		tmp.close(preserve=True)
 		driver = Driver(requirements = Requirements(tmp.name), config = self.config)
 		try:
 			download_and_execute(driver, ['Hello'])
@@ -133,7 +134,7 @@ class TestDriver(BaseTest):
 
 	def testBinding(self):
 		local_impl = os.path.dirname(os.path.abspath(__file__))
-		tmp = tempfile.NamedTemporaryFile()
+		tmp = NamedTemporaryFile()
 		tmp.write(
 """<?xml version="1.0" ?>
 <interface
@@ -155,7 +156,7 @@ class TestDriver(BaseTest):
     </implementation>
   </group>
 </interface>""" % (foo_iface_uri, local_impl))
-		tmp.flush()
+		tmp.close(preserve=True)
 		self.cache_iface(foo_iface_uri,
 """<?xml version="1.0" ?>
 <interface last-modified="0"
