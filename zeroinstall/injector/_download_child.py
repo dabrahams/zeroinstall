@@ -9,10 +9,16 @@ from zeroinstall.support import ssl_match_hostname
 
 import urllib2, httplib
 
+try:
+	import certifi
+	ca_bundles = [ certifi.where() ]
+except:
+	ca_bundles = []
+
 # Note: on MacOS X at least, it will also look in the system keychain provided that you supply *some* CAs.
 # (if you don't specify any trusted CAs, Python trusts everything!)
 # So, the "fallback" option doesn't necessarily mean that other sites won't work.
-for ca_bundle in [
+for ca_bundle in ca_bundles + [
 		"/etc/ssl/certs/ca-certificates.crt",	# Debian/Ubuntu/Arch Linux
 		"/etc/pki/tls/certs/ca-bundle.crt",	# Fedora/RHEL
 		"/etc/ssl/ca-bundle.pem",		# openSUSE/SLE (claimed)
