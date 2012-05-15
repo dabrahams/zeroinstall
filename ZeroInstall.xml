@@ -35,7 +35,16 @@ requires first uninstalling another.</description>
   </release:management>
 
   <group license="OSI Approved :: GNU Lesser General Public License (LGPL)" main="0launch">
-    <command name="run" path="0launch">
+    <command name="run" path="zeroinstall/scripts/launch.py">
+      <runner interface="http://repo.roscidus.com/python/python"/>
+    </command>
+    <command name="0alias" path="zeroinstall/scripts/alias.py">
+      <runner interface="http://repo.roscidus.com/python/python"/>
+    </command>
+    <command name="0install" path="zeroinstall/scripts/install.py">
+      <runner interface="http://repo.roscidus.com/python/python"/>
+    </command>
+    <command name="0store" path="zeroinstall/scripts/store.py">
       <runner interface="http://repo.roscidus.com/python/python"/>
     </command>
     <command name="0install" path="0install">
@@ -56,6 +65,8 @@ requires first uninstalling another.</description>
       <executable-in-var name="ZEROINSTALL_GPG"/>
     </requires>
 
-    <implementation id="." version="1.9-post"/>
+    <implementation id="." version="1.9-post">
+      <environment insert="." mode="replace" name="PYTHONPATH"/>
+    </implementation>
   </group>
 </interface>
