@@ -8,7 +8,7 @@ Executes a set of implementations as a program.
 from __future__ import print_function
 
 from zeroinstall import _
-import os, sys
+import os, sys, subprocess
 from logging import info, debug
 from string import Template
 
@@ -321,6 +321,9 @@ def execute_selections(selections, prog_args, dry_run = False, main = None, wrap
 				if x in env:
 					del env[x]
 
-			os.execve(prog_args[0], prog_args, env)
+			if os.name == 'posix':
+				os.execv(prog_args[0], prog_args)
+			else:
+				subprocess.check_call(prog_args)
 		except OSError as ex:
 			raise SafeException(_("Failed to run '%(program_path)s': %(exception)s") % {'program_path': prog_args[0], 'exception': str(ex)})
